@@ -1,0 +1,12 @@
+# Mini SIEM Simulator — Unified Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core dependencies
+requests>=2.31.0        # HTTP client for geolocation (ip-api.com)
+colorama>=0.4.6         # Colors ANSI on terminal (Windows/Linux/macOS)
+rich>=13.7.0            # Terminal UI with professional formatting
+
+# ─── Development / Testing (optional) ───────────────────────
+pytest>=7.4.0           # Testing framework
+ruff>=0.4.0             # Static analysis
+mypy>=1.8.0             # Type checking

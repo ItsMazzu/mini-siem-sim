@@ -1,0 +1,20 @@
+# ─────────────────────────────────────────────────────────────
+# Blacklist de IPs Maliciosos Conhecidos
+# ─────────────────────────────────────────────────────────────
+# Formato: um IP por linha (IPv4 ou IPv6)
+# Comentários iniciam com #
+# IPs inválidos são ignorados automaticamente pelo sistema
+# ─────────────────────────────────────────────────────────────
+
+# IPs de demonstração para testes
+203.0.113.45
+45.77.10.1
+
+# Tor Exit Nodes conhecidos
+185.220.101.45
+185.220.101.47
+162.247.74.74
+
+# Scanners registrados (Shodan / ZMap)
+89.248.167.131
+80.82.77.139
