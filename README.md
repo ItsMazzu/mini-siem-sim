@@ -1,216 +1,303 @@
-# 🔐 Mini SIEM Simulator v1.0
+# 🔐 Mini SIEM Simulator
 
-> **Unified threat detection engine** combining authentication pattern analysis, geolocation enrichment, and unified threat scoring.
+**A Python-based security log analyzer for suspicious authentication activity, IP geolocation enrichment, and threat scoring.**
 
-> **Status**: ✅ **Integrated** — Merges `security-log-analyzer` + `suspicious-ip-detector` into a single cohesive SIEM simulator.
+The Mini SIEM Simulator is a defensive security project designed to analyze authentication logs, identify suspicious activity patterns, enrich IP addresses with geolocation data, and prioritize findings through a unified threat score.
 
----
+The project brings together authentication analysis and suspicious IP investigation in a single command-line workflow.
 
-## 📋 Quick Facts
+## 📌 Overview
 
-| Aspect | Details |
-|--------|---------|
-| **Purpose** | Analyze authentication logs for security threats + geolocation-based investigation |
-| **Input** | Authentication logs (CSV): timestamp, username, IP, status |
-| **Analysis Flow** | **Auth Detection → Geolocation (cached) → Unified Scoring → Recommendations** |
-| **Output** | Rich terminal report with threat scores, attack types, recommendations |
-| **Detection Methods** | Brute force, credential stuffing, account compromise, port scans, SQL injection |
-| **Threat Score** | 0–100 (LOW/MEDIUM/HIGH/CRITICAL) with detailed indicators |
-| **Geolocation** | ip-api.com with per-IP caching to avoid redundant API calls |
-| **Database** | SQLite with indices for fast queries (optional) |
-| **Language** | Python 3.8+ |
+| Item | Description |
+|---|---|
+| **Project** | Mini SIEM Simulator |
+| **Version** | 1.0 |
+| **Language** | Python |
+| **Input** | Authentication logs in CSV format |
+| **Analysis** | Authentication patterns, IP context, and threat scoring |
+| **Output** | Threat analysis report in the terminal |
+| **Persistence** | Optional SQLite database |
+| **Geolocation** | [ip-api.com](http://ip-api.com/) |
+| **Python requirement** | Python 3.8+ |
 
----
+### What does it do?
 
-## 🎯 What It Does
+- Analyzes authentication logs to identify suspicious activity.
+- Detects patterns associated with brute-force attempts, credential stuffing, and possible account compromise.
+- Checks IP addresses against a local blacklist.
+- Enriches IP information using a geolocation API, with caching.
+- Combines detection indicators into a threat score from 0 to 100.
+- Presents findings, threat classifications, and suggested mitigation steps.
 
-1. **Auth Detection** (from security-log-analyzer)
-   - Brute force attacks (time-windowed)
-   - Credential stuffing (multiple usernames)
-   - Account compromise (failures → success)
-   - Blacklist IP matching
+The project is intended for learning, experimentation, and demonstrating a basic defensive security analysis workflow. It is not presented as a replacement for a production SIEM.
 
-2. **Geolocation Enrichment** (from suspicious-ip-detector)
-   - IP geolocation via ip-api.com
-   - Country, city, ISP, organization, coordinates
-   - Caching to avoid redundant API calls
-   - ⚠️  Graceful fallback if API fails
+## ✨ Features
 
-3. **Unified Threat Scoring**
-   - Combining auth patterns + geolocation context
-   - 0–100 point system with weighted factors
-   - Attack type classification (8 types)
-   - Intrusion confirmation detection
+### 🔎 Authentication Analysis
 
-4. **Actionable Recommendations**
-   - Severity-based mitigation steps
-   - Attack-specific remediation advice
-   - Response procedures for critical threats
+The analyzer examines authentication events and looks for patterns such as:
 
----
+- **Brute force:** repeated failed authentication attempts within a time window.
+- **Credential stuffing:** authentication attempts involving multiple usernames.
+- **Possible account compromise:** a successful authentication following failed attempts.
+- **Blacklist matching:** identification of IP addresses listed in a local blacklist.
 
-## 📁 Project Structure
+The results depend on the available log data and the detection logic implemented in the project.
 
-```
+### 🌐 IP Geolocation Enrichment
+
+The geolocation component retrieves contextual information about IP addresses through `ip-api.com`.
+
+Available enrichment fields include:
+
+- Country and city.
+- Internet service provider (ISP).
+- Organization.
+- Geographic coordinates.
+
+The component includes per-IP caching and a fallback path for API failures.
+
+Geolocation provides additional investigation context; it does not, by itself, establish that an IP address is malicious.
+
+### 🎯 Unified Threat Scoring
+
+The scoring component combines authentication patterns and contextual indicators into a score ranging from **0 to 100**.
+
+The project uses the following severity ranges:
+
+| Score | Severity | Suggested response |
+|---:|---|---|
+| 80–100 | Critical | Immediate blocking is recommended |
+| 55–79 | High | Blocking or rate limiting is recommended |
+| 30–54 | Medium | Review is recommended |
+| 0–29 | Low | Monitoring is recommended |
+
+Scoring factors documented in the project include activity volume, attack classification, blacklist matches, successful intrusions, malicious payload indicators, and suspicious ISP information.
+
+These scores are prioritization signals, not proof of compromise. The suggested responses should be evaluated in the context of the environment being investigated.
+
+### 📋 Reports and Recommendations
+
+The command-line report brings together the analysis results, including:
+
+- Threat scores and severity levels.
+- Attack classifications.
+- Detection indicators.
+- Suggested mitigation actions.
+- Response guidance for critical findings.
+
+The project also includes terminal output formatting through `Rich` and `Colorama`.
+
+### 🗄️ Optional SQLite Storage
+
+SQLite persistence is optional. The project includes a database component and a database location for runtime data.
+
+The CLI provides a `--no-db` option to run without database persistence.
+
+### 🧰 Supporting Components
+
+The project also includes:
+
+- CSV parsing and input validation.
+- A configuration module.
+- A pipeline coordinating the analysis stages.
+- A threat classification component.
+- A utility for input validation and sanitization.
+- A rotating file logger.
+- A bridge for the previous SIEM-related components.
+
+## ⚙️ Technology Stack
+
+| Technology | Role |
+|---|---|
+| **Python 3.8+** | Main programming language |
+| **SQLite** | Optional local persistence |
+| **Requests** | HTTP requests for geolocation |
+| **ip-api.com** | IP geolocation data source |
+| **Rich** | Formatted terminal output |
+| **Colorama** | Terminal colors |
+| **Pytest** | Automated testing |
+| **Ruff** | Python linting |
+| **Mypy** | Static type checking |
+
+## 🏗️ Project Structure
+
+```text
 mini-siem-sim/
-│
-├── src/                          # Main package
-│   ├── __init__.py
-│   ├── main.py                   # Unified CLI entry point
-│   ├── config.py                 # Merged configuration (all thresholds)
-│   ├── pipeline.py               # Orchestrator (auth → geo → scoring)
-│   │
-│   ├── parser.py                 # CSV parsing + validation
-│   ├── analyzer.py               # Auth-based threat detection
-│   ├── database.py               # SQLite persistence (optional)
-│   ├── ui.py                     # Rich terminal output
-│   ├── bridge.py                 # Legacy SIEM Simulator bridge
-│   │
-│   ├── detector/                 # Attack detection & scoring
-│   │   ├── geo_locator.py        # IP geolocation (ip-api.com)
-│   │   ├── attack_classifier.py  # Attack type classification
-│   │   ├── threat_scorer.py      # Unified 0–100 scoring
-│   │   └── ip_analyzer.py        # CSV orchestrator
-│   │
-│   ├── models/                   # Data structures
-│   │   └── event.py              # AccessEvent, AnalysisResult, ThreatLevel
-│   │
-│   ├── report/                   # Output formatting
-│   │   └── reporter.py           # Rich terminal reports
-│   │
-│   └── utils/                    # Shared utilities
-│       ├── logger.py             # Rotating file logger
-│       └── validator.py          # Input validation & sanitization
-│
-├── data/                         # Test data & outputs
-│   ├── auth_logs.csv             # Sample auth logs (85 entries)
-│   ├── siem_export.csv           # Generated by bridge (ignored by git)
-│   └── logs/                     # Application logs (daily rotation)
-│
+├── src/
+│   ├── main.py
+│   ├── config.py
+│   ├── pipeline.py
+│   ├── parser.py
+│   ├── analyzer.py
+│   ├── database.py
+│   ├── ui.py
+│   ├── bridge.py
+│   ├── detector/
+│   │   ├── geo_locator.py
+│   │   ├── attack_classifier.py
+│   │   ├── threat_scorer.py
+│   │   └── ip_analyzer.py
+│   ├── models/
+│   │   └── event.py
+│   ├── report/
+│   │   └── reporter.py
+│   └── utils/
+│       ├── logger.py
+│       └── validator.py
+├── data/
+│   └── auth_logs.csv
 ├── config/
-│   └── malicious_ips.txt         # Blacklist of known threats
-│
+│   └── malicious_ips.txt
 ├── database/
-│   └── logs.db                   # SQLite database (generated at runtime)
-│
+│   └── logs.db
 ├── tests/
-│   └── test_analyzer.py          # Unit tests (25+ cases)
-│
-├── run.py                        # Quick start script
-├── requirements.txt              # Python dependencies
-├── .gitignore
-└── README.md
+│   └── test_analyzer.py
+├── run.py
+├── requirements.txt
+└── .gitignore
 ```
 
----
-
-## 🚀 Quick Start
-
-### Installation
-
-```bash
-# Clone the repo
-cd mini-siem-sim
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### Usage
-
-```bash
-# Run with defaults (CSV: data/auth_logs.csv)
-python run.py
-
-# Custom CSV file
-python run.py --csv path/to/your/logs.csv
-
-# Skip geolocation (faster, local analysis only)
-python run.py --no-geo
-
-# Skip database persistence
-python run.py --no-db
-
-# Fast mode (skip both)
-python run.py --no-geo --no-db
-
-# Get help
-python run.py --help
-```
-
----
-
-## ⚙️ Configuration
-
-Edit `src/config.py` to customize thresholds and settings. All detection parameters are centralized there.
-
----
+The database and generated exports are runtime artifacts rather than required source files. The project also includes a SIEM bridge that can generate an export file.
 
 ## 🔄 Analysis Pipeline
 
-**Flow**: Auth Detection (first) → Geolocation (second) → Unified Scoring → Recommendations
+The documented workflow follows these stages:
 
-The pipeline runs in phases:
-1. Load CSV logs
-2. Validate entries
-3. Store in SQLite (optional)
-4. Detect auth-based threats (brute force, credential stuffing, etc.)
-5. Enrich with geolocation (with caching)
-6. Calculate unified threat scores
-7. Generate actionable recommendations
+```text
+Authentication CSV
+        |
+        v
+CSV Parsing and Validation
+        |
+        v
+Authentication Threat Detection
+        |
+        v
+IP Geolocation Enrichment
+        |
+        v
+Unified Threat Scoring
+        |
+        v
+Report and Recommendations
+```
 
----
+SQLite storage is optional and can be disabled through the command-line interface.
 
-## 📊 Threat Scoring System
+## 🚀 Getting Started
 
-**Range**: 0–100 points
+### Requirements
 
-**Components**:
-- Volume (attempts): 0–40 pts
-- Attack type: 0–40 pts
-- Blacklist match: +25 pts
-- Successful intrusion: +20 pts
-- Malicious payload: +15 pts
-- Suspicious ISP: +10 pts
-- And more...
+- Python 3.8 or later.
+- `pip`.
+- Internet access for geolocation lookups through `ip-api.com`, unless geolocation is disabled.
 
-**Levels**:
-- ⛔ CRITICAL (80–100): Block immediately
-- 🔴 HIGH (55–79): Block or rate-limit
-- 🟡 MEDIUM (30–54): Review and monitor
-- 🟢 LOW (0–29): Continue monitoring
+### Installation
 
----
+Clone the repository and enter the project directory:
 
-## 🧪 Testing
+```bash
+git clone https://github.com/ItsMazzu/mini-siem-sim.git
+cd mini-siem-sim
+```
+
+Install the dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+### Run the project
+
+Start the CLI:
+
+```bash
+python run.py
+```
+
+The project includes sample authentication data at `data/auth_logs.csv`.
+
+### Command-line options
+
+The README documents the following options:
+
+```bash
+python run.py --help
+```
+
+| Option | Purpose |
+|---|---|
+| `--csv` | Specify the CSV input |
+| `--no-geo` | Disable geolocation enrichment |
+| `--no-db` | Disable database persistence |
+| `--help` | Display command-line help |
+
+For example, to run without geolocation and database persistence:
+
+```bash
+python run.py --no-geo --no-db
+```
+
+For the exact supported syntax and defaults, consult the CLI help output.
+
+## 🧪 Tests
+
+The repository includes automated tests under `tests/`, including `tests/test_analyzer.py`.
+
+Run the test suite with:
 
 ```bash
 pytest tests/
+```
+
+To run tests with coverage, use:
+
+```bash
 pytest --cov=src tests/
 ```
 
----
+The repository also lists Ruff and Mypy among its development tools.
 
-## 🔐 Security Features
+Test execution results and coverage percentages should be measured in the target environment rather than assumed from the presence of test files or commands.
 
-- ✅ Input sanitization
-- ✅ SQL injection protection
-- ✅ Timestamp validation
-- ✅ Private IP detection
-- ✅ Rotating logs
-- ✅ Geolocation caching to prevent API abuse
+## 🔐 Security Considerations
 
----
+Security-oriented behavior documented in the project includes:
 
-## 📚 Dependencies
+- Input validation and sanitization.
+- SQL injection protection.
+- Timestamp validation.
+- Private IP detection.
+- Rotating log files.
+- Caching of geolocation lookups to reduce repeated API requests.
 
-- `requests` — HTTP client for geolocation
-- `colorama` — ANSI colors
-- `rich` — Terminal UI
-- `pytest`, `ruff`, `mypy` — Dev tools (optional)
+These are implementation areas relevant to the project’s defensive security goals. Their effectiveness depends on the underlying code and should be assessed through code review and appropriate tests.
 
-Install all: `pip install -r requirements.txt`
+### Current scope and limitations
 
----
+- The documented input is authentication data in CSV format.
+- The primary interface is a command-line application.
+- Geolocation depends on an external service when enabled.
+- Threat scores and geolocation results are indicators for investigation, not definitive proof of malicious activity.
+- The documented workflow does not establish continuous log ingestion, real-time monitoring, or automated blocking of threats.
 
-**Status**: ✅ **Fully integrated and operational**
+The project should therefore be understood as a **SIEM simulator and security log analysis tool**, not a complete production SIEM or an automated incident response platform.
+
+## 🎯 Project Goals
+
+The project brings together several defensive security concepts in one Python application:
+
+- Authentication log analysis.
+- Suspicious activity detection.
+- IP intelligence enrichment.
+- Threat classification and prioritization.
+- Input validation and data handling.
+- Optional local persistence.
+- Structured reporting and mitigation recommendations.
+
+The focus is on combining these components into a single workflow that helps make suspicious authentication activity easier to inspect and investigate.
+
+## 📄 License
+
+Check the repository for license information and applicable usage terms.
